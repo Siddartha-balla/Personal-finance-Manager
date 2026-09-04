@@ -79,8 +79,10 @@
                         <input type="date" id="incomeDate" required>
                     </div>
 
-                    <button type="submit">Add Income</button>
-
+                    <button type="submit" id="incomeSubmitBtn">Add Income</button>
+<button type="button" id="cancelIncomeEditBtn" style="display: none;">
+    Discard Edit
+</button>
                     <p id="incomeMessage"></p>
 
                 </form>
@@ -105,20 +107,7 @@
                         <label for="expenseCategory">Category</label>
 
                         <select id="expenseCategory" required>
-
                             <option value="">Select category</option>
-
-                            <option value="1">Food</option>
-                            <option value="2">Rent</option>
-                            <option value="3">Shopping</option>
-                            <option value="4">Travel</option>
-                            <option value="5">Bills</option>
-                            <option value="6">Education</option>
-                            <option value="7">Entertainment</option>
-                            <option value="8">Healthcare</option>
-                            <option value="9">Transportation</option>
-                            <option value="10">Other</option>
-
                         </select>
 
                     </div>
@@ -133,7 +122,11 @@
                         <input type="date" id="expenseDate" required>
                     </div>
 
-                    <button type="submit">Add Expense</button>
+                   <button type="submit" id="expenseSubmitBtn">Add Expense</button>
+
+<button type="button" id="cancelExpenseEditBtn" style="display: none;">
+    Discard Edit
+</button>
 
                     <p id="expenseMessage"></p>
 

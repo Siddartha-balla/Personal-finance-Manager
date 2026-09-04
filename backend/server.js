@@ -5,6 +5,7 @@ const testRoutes = require("./routes/testRoutes");
 const authRoutes = require("./routes/authRoutes");
 const incomeRoutes = require("./routes/incomeRoutes");
 const expenseRoutes = require("./routes/expenseRoutes");
+const categoryRoute=require("./routes/categoriesRoutes");
 const app = express();
 
 
@@ -15,7 +16,7 @@ app.use("/api/test", testRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/income",incomeRoutes);
 app.use("/api/expense",expenseRoutes);
-
+app.use("/api/categories",categoryRoute);
 app.get("/", (req, res) => {
     res.send("Personal Finance Manager API is running");
 });

@@ -61,6 +61,7 @@ const getExpenses = async (req, res) => {
         const [expenses] = await pool.execute(
             `SELECT
                 expenses.id,
+                expenses.category_id,
                 expenses.amount,
                 categories.name AS category,
                 expenses.description,
