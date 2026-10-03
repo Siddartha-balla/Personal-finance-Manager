@@ -683,7 +683,9 @@ async function loadDashboard() {
     const loadingMessage =
         document.getElementById("loadingMessage");
 
-    loadingMessage.style.display = "block";
+    if (loadingMessage) {
+        loadingMessage.style.display = "block";
+    }
 
     const income =
         await fetchIncome();
@@ -714,9 +716,10 @@ async function loadDashboard() {
         expenses
     );
 
-    loadingMessage.style.display = "none";
+    if (loadingMessage) {
+        loadingMessage.style.display = "none";
+    }
 }
-
 loadDashboard();
 
 
