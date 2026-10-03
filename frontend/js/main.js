@@ -1,14 +1,28 @@
+const API_URL =
+    (window.location.hostname === "localhost" ||
+     window.location.hostname === "127.0.0.1")
+        ? "http://localhost:5000/api"
+        : "https://personal-finance-api-a316.onrender.com/api";
+
 const token = localStorage.getItem("token");
 const user = JSON.parse(localStorage.getItem("user"));
+
 let editingIncomeId = null;
 let editingExpenseId = null;
+
+let incomeExpenseChart = null;
+let expenseCategoryChart = null;
+
+
 // Check if user is logged in
+
 if (!token) {
     window.location.href = "login.html";
 }
 
 
 // Display user's name
+
 if (user) {
     document.getElementById("welcomeMessage").textContent =
         `Welcome, ${user.name}`;
@@ -16,10 +30,12 @@ if (user) {
 
 
 // Fetch income
+
 async function fetchIncome() {
     try {
+
         const response = await fetch(
-            "http://localhost:5000/api/income/all",
+            `${API_URL}/income/all`,
             {
                 headers: {
                     Authorization: `Bearer ${token}`
@@ -28,10 +44,12 @@ async function fetchIncome() {
         );
 
         const data = await response.json();
-        if (response.status === 401) {//if token expires
-    logoutUser();
-    return [];
-}
+
+        if (response.status === 401) {
+            logoutUser();
+            return [];
+        }
+
         if (!data.success) {
             console.error(data.message);
             return [];
@@ -40,6 +58,7 @@ async function fetchIncome() {
         return data.income;
 
     } catch (error) {
+
         console.error("Error fetching income:", error);
         return [];
     }
@@ -47,10 +66,12 @@ async function fetchIncome() {
 
 
 // Fetch expenses
+
 async function fetchExpenses() {
     try {
+
         const response = await fetch(
-            "http://localhost:5000/api/expense/all",
+            `${API_URL}/expense/all`,
             {
                 headers: {
                     Authorization: `Bearer ${token}`
@@ -59,10 +80,12 @@ async function fetchExpenses() {
         );
 
         const data = await response.json();
+
         if (response.status === 401) {
-    logoutUser();
-    return [];
-}
+            logoutUser();
+            return [];
+        }
+
         if (!data.success) {
             console.error(data.message);
             return [];
@@ -71,15 +94,20 @@ async function fetchExpenses() {
         return data.expenses;
 
     } catch (error) {
+
         console.error("Error fetching expenses:", error);
         return [];
     }
 }
-//fetching categories
+
+
+// Fetch categories
+
 async function fetchCategories() {
     try {
+
         const response = await fetch(
-            "http://localhost:5000/api/categories"
+            `${API_URL}/categories`
         );
 
         const data = await response.json();
@@ -92,19 +120,26 @@ async function fetchCategories() {
         return data.categories;
 
     } catch (error) {
+
         console.error("Error fetching categories:", error);
         return [];
     }
 }
-//displaying categories
+
+
+// Display categories
+
 function displayCategories(categories) {
-    const categorySelect = document.getElementById("expenseCategory");
+
+    const categorySelect =
+        document.getElementById("expenseCategory");
 
     categorySelect.innerHTML = `
         <option value="">Select category</option>
     `;
 
     categories.forEach(category => {
+
         const option = document.createElement("option");
 
         option.value = category.id;
@@ -114,13 +149,19 @@ function displayCategories(categories) {
     });
 }
 
+
 // Display income
+
 function displayIncome(income) {
 
-    const incomeList = document.getElementById("incomeList");
+    const incomeList =
+        document.getElementById("incomeList");
 
     if (income.length === 0) {
-        incomeList.innerHTML = "<p>No income records yet.</p>";
+
+        incomeList.innerHTML =
+            "<p>No income records yet.</p>";
+
         return;
     }
 
@@ -129,229 +170,313 @@ function displayIncome(income) {
     income.forEach(item => {
 
         const div = document.createElement("div");
-div.classList.add("transaction-item");
+
+        div.classList.add("transaction-item");
+
         div.innerHTML = `
-    <div class="transaction-details">
-        <div>
-            <strong>₹${item.amount}</strong>
-            <span>${item.source}</span>
-        </div>
+            <div class="transaction-details">
 
-        <p>${item.description || "No description"}</p>
-        <small>${item.income_date.split("T")[0]}</small>
-    </div>
+                <div>
+                    <strong>₹${item.amount}</strong>
+                    <span>${item.source}</span>
+                </div>
 
-    <div class="transaction-actions">
-        <button class="edit-income" data-id="${item.id}">
-            Edit
-        </button>
+                <p>${item.description || "No description"}</p>
 
-        <button class="delete-income" data-id="${item.id}">
-            Delete
-        </button>
-    </div>
-`;
+                <small>
+                    ${item.income_date.split("T")[0]}
+                </small>
+
+            </div>
+
+            <div class="transaction-actions">
+
+                <button
+                    class="edit-income"
+                    data-id="${item.id}">
+                    Edit
+                </button>
+
+                <button
+                    class="delete-income"
+                    data-id="${item.id}">
+                    Delete
+                </button>
+
+            </div>
+        `;
 
         incomeList.appendChild(div);
     });
 }
-//edit income
-document.getElementById("incomeList").addEventListener("click", async (event) => {
 
-    if (!event.target.classList.contains("edit-income")) {
-        return;
-    }
 
-    const incomeId = event.target.dataset.id;
+// Edit income
 
-    const income = await fetchIncome();
+document.getElementById("incomeList")
+    .addEventListener("click", async (event) => {
 
-    const selectedIncome = income.find(
-        item => item.id == incomeId
-    );
+        if (!event.target.classList.contains("edit-income")) {
+            return;
+        }
 
-    if (!selectedIncome) {
-        alert("Income record not found");
-        return;
-    }
+        const incomeId =
+            event.target.dataset.id;
 
-    editingIncomeId = incomeId;
-    window.scrollTo({
-    top: 0,
-    behavior: "smooth"
-});
-document.getElementById("incomeSubmitBtn").textContent = "Save Edit";
+        const income =
+            await fetchIncome();
 
-document.getElementById("cancelIncomeEditBtn").style.display = "inline-block";
-    document.getElementById("incomeAmount").value =
-        selectedIncome.amount;
+        const selectedIncome =
+            income.find(item => item.id == incomeId);
 
-    document.getElementById("incomeSource").value =
-        selectedIncome.source;
+        if (!selectedIncome) {
 
-    document.getElementById("incomeDescription").value =
-        selectedIncome.description || "";
+            alert("Income record not found");
 
-    document.getElementById("incomeDate").value =
-    selectedIncome.income_date.split("T")[0];
-    
-});
-document.getElementById("cancelIncomeEditBtn").addEventListener("click", () => {
+            return;
+        }
 
-    editingIncomeId = null;
+        editingIncomeId = incomeId;
 
-    document.getElementById("incomeForm").reset();
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
 
-    document.getElementById("incomeSubmitBtn").textContent = "Add Income";
+        document.getElementById("incomeSubmitBtn")
+            .textContent = "Save Edit";
 
-    document.getElementById("cancelIncomeEditBtn").style.display = "none";
-});
-//edit expense
-document.getElementById("expenseList").addEventListener("click", async (event) => {
+        document.getElementById("cancelIncomeEditBtn")
+            .style.display = "inline-block";
 
-    if (!event.target.classList.contains("edit-expense")) {
-        return;
-    }
+        document.getElementById("incomeAmount")
+            .value = selectedIncome.amount;
 
-    const expenseId = event.target.dataset.id;
+        document.getElementById("incomeSource")
+            .value = selectedIncome.source;
 
-    const expenses = await fetchExpenses();
+        document.getElementById("incomeDescription")
+            .value = selectedIncome.description || "";
 
-    const selectedExpense = expenses.find(
-        item => item.id == expenseId
-    );
+        document.getElementById("incomeDate")
+            .value = selectedIncome.income_date.split("T")[0];
 
-    if (!selectedExpense) {
-        alert("Expense record not found");
-        return;
-    }
-
-    editingExpenseId = expenseId;
-
-    window.scrollTo({
-        top: 0,
-        behavior: "smooth"
     });
 
-    document.getElementById("expenseAmount").value =
-        selectedExpense.amount;
 
-    document.getElementById("expenseDescription").value =
-        selectedExpense.description || "";
+// Cancel income edit
 
-    document.getElementById("expenseDate").value =
-        selectedExpense.expense_date.split("T")[0];
+document.getElementById("cancelIncomeEditBtn")
+    .addEventListener("click", () => {
 
-    document.getElementById("expenseSubmitBtn").textContent =
-        "Save Edit";
+        editingIncomeId = null;
 
-    document.getElementById("cancelExpenseEditBtn").style.display =
-        "inline-block";
+        document.getElementById("incomeForm").reset();
 
-    document.getElementById("expenseCategory").value =
-        selectedExpense.category_id;
-});
-document.getElementById("cancelExpenseEditBtn").addEventListener("click", () => {
+        document.getElementById("incomeSubmitBtn")
+            .textContent = "Add Income";
 
-    editingExpenseId = null;
+        document.getElementById("cancelIncomeEditBtn")
+            .style.display = "none";
 
-    document.getElementById("expenseForm").reset();
+    });
 
-    document.getElementById("expenseSubmitBtn").textContent = "Add Expense";
 
-    document.getElementById("cancelExpenseEditBtn").style.display = "none";
-});
-//delete income
-document.getElementById("incomeList").addEventListener("click", async (event) => {
+// Edit expense
 
-    if (!event.target.classList.contains("delete-income")) {
-        return;
-    }
+document.getElementById("expenseList")
+    .addEventListener("click", async (event) => {
 
-    const incomeId = event.target.dataset.id;
-
-    const confirmDelete = confirm("Are you sure you want to delete this income?");
-
-    if (!confirmDelete) {
-        return;
-    }
-
-    try {
-
-        const response = await fetch(
-            `http://localhost:5000/api/income/${incomeId}`,
-            {
-                method: "DELETE",
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            }
-        );
-
-        const data = await response.json();
-
-        if (data.success) {
-            await loadDashboard();
-        } else {
-            alert(data.message);
+        if (!event.target.classList.contains("edit-expense")) {
+            return;
         }
 
-    } catch (error) {
+        const expenseId =
+            event.target.dataset.id;
 
-        console.error("Delete income error:", error);
-        alert("Unable to connect to server");
-    }
-});
-//delete expense
-document.getElementById("expenseList").addEventListener("click", async (event) => {
+        const expenses =
+            await fetchExpenses();
 
-    if (!event.target.classList.contains("delete-expense")) {
-        return;
-    }
+        const selectedExpense =
+            expenses.find(item => item.id == expenseId);
 
-    const expenseId = event.target.dataset.id;
+        if (!selectedExpense) {
 
-    const confirmDelete = confirm(
-        "Are you sure you want to delete this expense?"
-    );
+            alert("Expense record not found");
 
-    if (!confirmDelete) {
-        return;
-    }
-
-    try {
-
-        const response = await fetch(
-            `http://localhost:5000/api/expense/${expenseId}`,
-            {
-                method: "DELETE",
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            }
-        );
-
-        const data = await response.json();
-
-        if (data.success) {
-            await loadDashboard();
-        } else {
-            alert(data.message);
+            return;
         }
 
-    } catch (error) {
+        editingExpenseId = expenseId;
 
-        console.error("Delete expense error:", error);
-        alert("Unable to connect to server");
-    }
-});
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
+
+        document.getElementById("expenseAmount")
+            .value = selectedExpense.amount;
+
+        document.getElementById("expenseDescription")
+            .value = selectedExpense.description || "";
+
+        document.getElementById("expenseDate")
+            .value = selectedExpense.expense_date.split("T")[0];
+
+        document.getElementById("expenseSubmitBtn")
+            .textContent = "Save Edit";
+
+        document.getElementById("cancelExpenseEditBtn")
+            .style.display = "inline-block";
+
+        document.getElementById("expenseCategory")
+            .value = selectedExpense.category_id;
+
+    });
+
+
+// Cancel expense edit
+
+document.getElementById("cancelExpenseEditBtn")
+    .addEventListener("click", () => {
+
+        editingExpenseId = null;
+
+        document.getElementById("expenseForm").reset();
+
+        document.getElementById("expenseSubmitBtn")
+            .textContent = "Add Expense";
+
+        document.getElementById("cancelExpenseEditBtn")
+            .style.display = "none";
+
+    });
+
+
+// Delete income
+
+document.getElementById("incomeList")
+    .addEventListener("click", async (event) => {
+
+        if (!event.target.classList.contains("delete-income")) {
+            return;
+        }
+
+        const incomeId =
+            event.target.dataset.id;
+
+        const confirmDelete =
+            confirm("Are you sure you want to delete this income?");
+
+        if (!confirmDelete) {
+            return;
+        }
+
+        try {
+
+            const response = await fetch(
+                `${API_URL}/income/${incomeId}`,
+                {
+                    method: "DELETE",
+
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            );
+
+            const data =
+                await response.json();
+
+            if (data.success) {
+
+                await loadDashboard();
+
+            } else {
+
+                alert(data.message);
+            }
+
+        } catch (error) {
+
+            console.error(
+                "Delete income error:",
+                error
+            );
+
+            alert("Unable to connect to server");
+        }
+    });
+
+
+// Delete expense
+
+document.getElementById("expenseList")
+    .addEventListener("click", async (event) => {
+
+        if (!event.target.classList.contains("delete-expense")) {
+            return;
+        }
+
+        const expenseId =
+            event.target.dataset.id;
+
+        const confirmDelete =
+            confirm("Are you sure you want to delete this expense?");
+
+        if (!confirmDelete) {
+            return;
+        }
+
+        try {
+
+            const response = await fetch(
+                `${API_URL}/expense/${expenseId}`,
+                {
+                    method: "DELETE",
+
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            );
+
+            const data =
+                await response.json();
+
+            if (data.success) {
+
+                await loadDashboard();
+
+            } else {
+
+                alert(data.message);
+            }
+
+        } catch (error) {
+
+            console.error(
+                "Delete expense error:",
+                error
+            );
+
+            alert("Unable to connect to server");
+        }
+    });
+
+
 // Display expenses
+
 function displayExpenses(expenses) {
 
-    const expenseList = document.getElementById("expenseList");
+    const expenseList =
+        document.getElementById("expenseList");
 
     if (expenses.length === 0) {
-        expenseList.innerHTML = "<p>No expense records yet.</p>";
+
+        expenseList.innerHTML =
+            "<p>No expense records yet.</p>";
+
         return;
     }
 
@@ -359,206 +484,465 @@ function displayExpenses(expenses) {
 
     expenses.forEach(item => {
 
-        const div = document.createElement("div");
-div.classList.add("transaction-item");
-       div.innerHTML = `
-    <div class="transaction-details">
-        <div>
-            <strong>₹${item.amount}</strong>
-            <span>${item.category}</span>
-        </div>
+        const div =
+            document.createElement("div");
 
-        <p>${item.description || "No description"}</p>
-        <small>${item.expense_date.split("T")[0]}</small>
-    </div>
+        div.classList.add("transaction-item");
 
-    <div class="transaction-actions">
-        <button class="edit-expense" data-id="${item.id}">
-            Edit
-        </button>
+        div.innerHTML = `
+            <div class="transaction-details">
 
-        <button class="delete-expense" data-id="${item.id}">
-            Delete
-        </button>
-    </div>
-`;
+                <div>
+                    <strong>₹${item.amount}</strong>
+                    <span>${item.category}</span>
+                </div>
+
+                <p>${item.description || "No description"}</p>
+
+                <small>
+                    ${item.expense_date.split("T")[0]}
+                </small>
+
+            </div>
+
+            <div class="transaction-actions">
+
+                <button
+                    class="edit-expense"
+                    data-id="${item.id}">
+                    Edit
+                </button>
+
+                <button
+                    class="delete-expense"
+                    data-id="${item.id}">
+                    Delete
+                </button>
+
+            </div>
+        `;
 
         expenseList.appendChild(div);
     });
 }
+
+
 // Calculate summary
+
 function updateSummary(income, expenses) {
 
-    const totalIncome = income.reduce(
-        (sum, item) => sum + Number(item.amount),
-        0
-    );
+    const totalIncome =
+        income.reduce(
+            (sum, item) =>
+                sum + Number(item.amount),
+            0
+        );
 
-    const totalExpense = expenses.reduce(
-        (sum, item) => sum + Number(item.amount),
-        0
-    );
+    const totalExpense =
+        expenses.reduce(
+            (sum, item) =>
+                sum + Number(item.amount),
+            0
+        );
 
-    const balance = totalIncome - totalExpense;
+    const balance =
+        totalIncome - totalExpense;
 
-    document.getElementById("totalIncome").textContent =
+    document.getElementById("totalIncome")
+        .textContent =
         `₹${totalIncome.toFixed(2)}`;
 
-    document.getElementById("totalExpense").textContent =
+    document.getElementById("totalExpense")
+        .textContent =
         `₹${totalExpense.toFixed(2)}`;
 
-    document.getElementById("balance").textContent =
+    document.getElementById("balance")
+        .textContent =
         `₹${balance.toFixed(2)}`;
 }
 
 
-// Load dashboard
-async function loadDashboard() {
+// Income vs Expense Chart
 
-    const income = await fetchIncome();
-    const expenses = await fetchExpenses();
-    const categories=await fetchCategories();
+function displayIncomeExpenseChart(income, expenses) {
 
-    displayIncome(income);
-    displayExpenses(expenses);
-    displayCategories(categories);
-    updateSummary(income, expenses);
+    const totalIncome =
+        income.reduce(
+            (sum, item) =>
+                sum + Number(item.amount),
+            0
+        );
+
+    const totalExpense =
+        expenses.reduce(
+            (sum, item) =>
+                sum + Number(item.amount),
+            0
+        );
+
+    const ctx =
+        document.getElementById("incomeExpenseChart");
+
+    if (incomeExpenseChart) {
+        incomeExpenseChart.destroy();
+    }
+
+    incomeExpenseChart =
+        new Chart(ctx, {
+
+            type: "bar",
+
+            data: {
+
+                labels: [
+                    "Income",
+                    "Expenses"
+                ],
+
+                datasets: [{
+
+                    label: "Amount",
+
+                    data: [
+                        totalIncome,
+                        totalExpense
+                    ]
+
+                }]
+
+            },
+
+            options: {
+                responsive: true
+            }
+        });
 }
 
 
-loadDashboard();
-// Add Income
-document.getElementById("incomeForm").addEventListener("submit", async (event) => {
+// Expense Category Chart
 
-    event.preventDefault();
+function displayExpenseCategoryChart(expenses) {
 
-    const amount = document.getElementById("incomeAmount").value;
-    const source = document.getElementById("incomeSource").value;
-    const description = document.getElementById("incomeDescription").value;
-    const income_date = document.getElementById("incomeDate").value;
+    const categoryTotals = {};
 
-    try {
+    expenses.forEach(item => {
 
-    const url = editingIncomeId
-        ? `http://localhost:5000/api/income/${editingIncomeId}`
-        : "http://localhost:5000/api/income";
+        if (!categoryTotals[item.category]) {
 
-    const method = editingIncomeId ? "PUT" : "POST";
+            categoryTotals[item.category] = 0;
+        }
 
-    const response = await fetch(url, {
-        method: method,
+        categoryTotals[item.category] +=
+            Number(item.amount);
 
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
-        },
-
-        body: JSON.stringify({
-            amount,
-            source,
-            description,
-            income_date
-        })
     });
 
-        const data = await response.json();
+    const labels =
+        Object.keys(categoryTotals);
 
-        document.getElementById("incomeMessage").textContent =
-            data.message;
+    const values =
+        Object.values(categoryTotals);
 
-        if (data.success) {
+    const ctx =
+        document.getElementById("expenseCategoryChart");
 
-    document.getElementById("incomeForm").reset();
+    if (expenseCategoryChart) {
+        expenseCategoryChart.destroy();
+    }
 
-    editingIncomeId = null;
+    expenseCategoryChart =
+        new Chart(ctx, {
 
-    document.getElementById("incomeSubmitBtn").textContent = "Add Income";
+            type: "pie",
 
-    document.getElementById("cancelIncomeEditBtn").style.display = "none";
+            data: {
 
-    await loadDashboard();
+                labels: labels,
+
+                datasets: [{
+
+                    label: "Expenses",
+
+                    data: values
+
+                }]
+
+            },
+
+            options: {
+                responsive: true
+            }
+        });
 }
 
-    } catch (error) {
 
-        console.error("Add income error:", error);
+// Load dashboard
 
-        document.getElementById("incomeMessage").textContent =
-            "Unable to connect to server";
-    }
-});
+async function loadDashboard() {
+
+    const loadingMessage =
+        document.getElementById("loadingMessage");
+
+    loadingMessage.style.display = "block";
+
+    const income =
+        await fetchIncome();
+
+    const expenses =
+        await fetchExpenses();
+
+    const categories =
+        await fetchCategories();
+
+    displayIncome(income);
+
+    displayExpenses(expenses);
+
+    displayCategories(categories);
+
+    updateSummary(
+        income,
+        expenses
+    );
+
+    displayIncomeExpenseChart(
+        income,
+        expenses
+    );
+
+    displayExpenseCategoryChart(
+        expenses
+    );
+
+    loadingMessage.style.display = "none";
+}
+
+loadDashboard();
+
+
+// Add Income
+
+document.getElementById("incomeForm")
+    .addEventListener("submit", async (event) => {
+
+        event.preventDefault();
+
+        const amount =
+            document.getElementById("incomeAmount").value;
+
+        const source =
+            document.getElementById("incomeSource").value;
+
+        const description =
+            document.getElementById("incomeDescription").value;
+
+        const income_date =
+            document.getElementById("incomeDate").value;
+
+        try {
+
+            const url = editingIncomeId
+                ? `${API_URL}/income/${editingIncomeId}`
+                : `${API_URL}/income`;
+
+            const method =
+                editingIncomeId
+                    ? "PUT"
+                    : "POST";
+
+            const response =
+                await fetch(url, {
+
+                    method: method,
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json",
+
+                        Authorization:
+                            `Bearer ${token}`
+                    },
+
+                    body: JSON.stringify({
+
+                        amount,
+                        source,
+                        description,
+                        income_date
+
+                    })
+                });
+
+            const data =
+                await response.json();
+
+            const incomeMessage =
+                document.getElementById("incomeMessage");
+
+            incomeMessage.textContent =
+                data.message;
+
+            incomeMessage.classList.remove(
+                "success-message",
+                "error-message"
+            );
+
+            incomeMessage.classList.add(
+                data.success
+                    ? "success-message"
+                    : "error-message"
+            );
+
+            if (data.success) {
+
+                document.getElementById("incomeForm")
+                    .reset();
+
+                editingIncomeId = null;
+
+                document.getElementById("incomeSubmitBtn")
+                    .textContent = "Add Income";
+
+                document.getElementById("cancelIncomeEditBtn")
+                    .style.display = "none";
+
+                await loadDashboard();
+            }
+
+        } catch (error) {
+
+            console.error(
+                "Add income error:",
+                error
+            );
+
+            document.getElementById("incomeMessage")
+                .textContent =
+                "Unable to connect to server";
+        }
+    });
 
 
 // Add Expense
-document.getElementById("expenseForm").addEventListener("submit", async (event) => {
 
-    event.preventDefault();
+document.getElementById("expenseForm")
+    .addEventListener("submit", async (event) => {
 
-    const amount = document.getElementById("expenseAmount").value;
-    const category_id = document.getElementById("expenseCategory").value;
-    const description = document.getElementById("expenseDescription").value;
-    const expense_date = document.getElementById("expenseDate").value;
+        event.preventDefault();
 
-    try {
+        const amount =
+            document.getElementById("expenseAmount").value;
 
-        const url = editingExpenseId
-            ? `http://localhost:5000/api/expense/${editingExpenseId}`
-            : "http://localhost:5000/api/expense";
+        const category_id =
+            document.getElementById("expenseCategory").value;
 
-        const method = editingExpenseId ? "PUT" : "POST";
+        const description =
+            document.getElementById("expenseDescription").value;
 
-        const response = await fetch(url, {
-            method: method,
+        const expense_date =
+            document.getElementById("expenseDate").value;
 
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`
-            },
+        try {
 
-            body: JSON.stringify({
-                category_id,
-                amount,
-                description,
-                expense_date
-            })
-        });
+            const url = editingExpenseId
+                ? `${API_URL}/expense/${editingExpenseId}`
+                : `${API_URL}/expense`;
 
-        const data = await response.json();
+            const method =
+                editingExpenseId
+                    ? "PUT"
+                    : "POST";
 
-        document.getElementById("expenseMessage").textContent =
-            data.message;
+            const response =
+                await fetch(url, {
 
-        if (data.success) {
+                    method: method,
 
-            document.getElementById("expenseForm").reset();
+                    headers: {
 
-            editingExpenseId = null;
+                        "Content-Type":
+                            "application/json",
 
-            document.getElementById("expenseSubmitBtn").textContent =
-                "Add Expense";
+                        Authorization:
+                            `Bearer ${token}`
+                    },
 
-            document.getElementById("cancelExpenseEditBtn").style.display =
-                "none";
+                    body: JSON.stringify({
 
-            await loadDashboard();
+                        category_id,
+                        amount,
+                        description,
+                        expense_date
+
+                    })
+                });
+
+            const data =
+                await response.json();
+
+            const expenseMessage =
+                document.getElementById("expenseMessage");
+
+            expenseMessage.textContent =
+                data.message;
+
+            expenseMessage.classList.remove(
+                "success-message",
+                "error-message"
+            );
+
+            expenseMessage.classList.add(
+                data.success
+                    ? "success-message"
+                    : "error-message"
+            );
+
+            if (data.success) {
+
+                document.getElementById("expenseForm")
+                    .reset();
+
+                editingExpenseId = null;
+
+                document.getElementById("expenseSubmitBtn")
+                    .textContent = "Add Expense";
+
+                document.getElementById("cancelExpenseEditBtn")
+                    .style.display = "none";
+
+                await loadDashboard();
+            }
+
+        } catch (error) {
+
+            console.error(
+                "Expense error:",
+                error
+            );
+
+            document.getElementById("expenseMessage")
+                .textContent =
+                "Unable to connect to server";
         }
+    });
 
-    } catch (error) {
-
-        console.error("Expense error:", error);
-
-        document.getElementById("expenseMessage").textContent =
-            "Unable to connect to server";
-    }
-});
 
 // Logout
+
 function logoutUser() {
+
     localStorage.removeItem("token");
+
     localStorage.removeItem("user");
 
     window.location.href = "login.html";
 }
-document.getElementById("logoutBtn").addEventListener("click", () => {
-    logoutUser();
-});
+
+
+document.getElementById("logoutBtn")
+    .addEventListener("click", () => {
+
+        logoutUser();
+
+    });
