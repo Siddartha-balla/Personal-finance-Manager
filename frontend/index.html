@@ -25,7 +25,9 @@
 
         <h1 id="welcomeMessage">Welcome</h1>
 
-
+        <p id="loadingMessage" style="display: none;">
+    Loading dashboard...
+</p>
         <!-- Summary Cards -->
 
         <section class="summary-container">
@@ -46,6 +48,19 @@
             </div>
 
         </section>
+        <section class="charts-container">
+
+    <div class="chart-card">
+        <h2>Income vs Expenses</h2>
+        <canvas id="incomeExpenseChart"></canvas>
+    </div>
+
+    <div class="chart-card">
+        <h2>Expenses by Category</h2>
+        <canvas id="expenseCategoryChart"></canvas>
+    </div>
+
+</section>
 
         <!-- Add Transaction Section -->
 
@@ -83,8 +98,7 @@
 <button type="button" id="cancelIncomeEditBtn" style="display: none;">
     Discard Edit
 </button>
-                    <p id="incomeMessage"></p>
-
+<p id="incomeMessage" class="form-message"></p>
                 </form>
 
             </div>
@@ -128,8 +142,7 @@
     Discard Edit
 </button>
 
-                    <p id="expenseMessage"></p>
-
+<p id="expenseMessage" class="form-message"></p>
                 </form>
 
             </div>
@@ -164,8 +177,8 @@
 
     </main>
 
-
-    <script src="js/main.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="js/main.js"></script>
 
 </body>
 
