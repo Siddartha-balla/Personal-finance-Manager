@@ -687,19 +687,12 @@ async function loadDashboard() {
         loadingMessage.style.display = "block";
     }
 
-    const income =
-        await fetchIncome();
-
-    const expenses =
-        await fetchExpenses();
-
-    const categories =
-        await fetchCategories();
+    const income = await fetchIncome();
+    const expenses = await fetchExpenses();
+    const categories = await fetchCategories();
 
     displayIncome(income);
-
     displayExpenses(expenses);
-
     displayCategories(categories);
 
     updateSummary(
