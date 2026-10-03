@@ -1,3 +1,8 @@
+const API_URL =
+    (window.location.hostname === "localhost" ||
+     window.location.hostname === "127.0.0.1")
+        ? "http://localhost:5000/api"
+        : "https://personal-finance-api-a316.onrender.com/api";
 const loginForm = document.getElementById("loginForm");
 const message = document.getElementById("message");
 
@@ -8,7 +13,7 @@ loginForm.addEventListener("submit", async (event) => {
     const password = document.getElementById("password").value;
 
     try {
-        const response = await fetch("http://localhost:5000/api/auth/login", {
+        const response = await fetch(`${API_URL}/auth/login`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
